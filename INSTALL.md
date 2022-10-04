@@ -94,7 +94,8 @@ sudo modprobe vfio-pci  # Load the vfio-pci module
 sudo $DPDK_PATH/usertools/dpdk-devbind.py --bind=vfio-pci <interface_name/pci_address>   # Unbinds from kernel module, binds to vfio-pci
 ```
 
-
+## Virtual Interface Configuration (Optional)
+If your NIC does not support DPDK (check [here](https://core.dpdk.org/supported/)), configure the file found at `configs/online-vdev.toml`. Specifically, you need to edit `iface=` in field `dpdk_supl_args` to point to the interface you want to run Retina/collect on. This can be found by running `ip a` (Linux), `ifconfig` (Mac), `ipconfig` (Windows) and looking for the interface that has your public IP address. (Of course you can also specify an interface other than this for whatever purposes you have). 
 
 ## Installing Rust
 ```sh
@@ -116,7 +117,19 @@ Build all applications:
 cargo build --release
 ```
 
-Run:
+Build only the basic application:
+```sh
+cargo build --release --bin basic
+```
+
+Run an application (replace `my_app`):
 ```sh
 sudo env LD_LIBRARY_PATH=$LD_LIBRARY_PATH RUST_LOG=error ./target/release/my_app
 ```
+
+Run `basic`:
+```sh
+sudo env LD_LIBRARY_PATH=$LD_LIBRARY_PATH RUST_LOG=error ./target/release/basic -c /home/retina/Documents/retina/configs/online-vdev.toml
+```
+
+In above, we also use a specific config file that uses a virtual interface (we use this as not all computers have a DPDK supported NIC).
