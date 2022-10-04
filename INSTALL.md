@@ -129,7 +129,7 @@ sudo env LD_LIBRARY_PATH=$LD_LIBRARY_PATH RUST_LOG=error ./target/release/my_app
 
 Run `basic`:
 ```sh
-sudo env LD_LIBRARY_PATH=$LD_LIBRARY_PATH RUST_LOG=error ./target/release/basic -c /home/retina/Documents/retina/configs/online-vdev.toml
+sudo env LD_LIBRARY_PATH=$LD_LIBRARY_PATH RUST_LOG=error ./target/release/basic -c <PATH_TO_RETINA>/configs/online-vdev.toml
 ```
 
-In above, we also use a specific config file that uses a virtual interface (we use this as not all computers have a DPDK supported NIC).
+In above, we also use a specific config file that uses a virtual interface (we use this as not all computers have a DPDK supported NIC). Be sure to change `<PATH_TO_RETINA>` to the correct path.
