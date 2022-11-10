@@ -60,10 +60,12 @@ pub mod protocols;
 mod runtime;
 pub mod subscription;
 pub mod utils;
+pub mod profiling;
 
 pub use self::conntrack::conn_id::{ConnId, FiveTuple};
 pub use self::memory::mbuf::Mbuf;
 pub use self::runtime::Runtime;
+pub use self::profiling::FeatureCosts;
 
 pub use dpdk::rte_rdtsc;
 

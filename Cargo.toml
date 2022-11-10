@@ -20,4 +20,3 @@ lto = true
 
 [patch.crates-io]
 pcap = { git = 'https://github.com/thegwan/pcap', branch = 'compile-optimized' }
-

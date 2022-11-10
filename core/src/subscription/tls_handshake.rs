@@ -25,10 +25,18 @@ use crate::memory::mbuf::Mbuf;
 use crate::protocols::stream::tls::{parser::TlsParser, Tls};
 use crate::protocols::stream::{ConnParser, Session, SessionData};
 use crate::subscription::{Level, Subscribable, Subscription, Trackable};
+use crate::profiling::FeatureCosts;
 
 use serde::Serialize;
 
 use std::net::SocketAddr;
+use std::time::Duration;
+
+use peak_alloc::PeakAlloc;
+use quanta::Clock;
+
+#[global_allocator]
+static P_ALLOC: PeakAlloc = PeakAlloc;
 
 /// A parsed TLS handshake and connection metadata.
 #[derive(Debug, Serialize)]
@@ -37,6 +45,8 @@ pub struct TlsHandshake {
     pub five_tuple: FiveTuple,
     /// Parsed TLS handshake data.
     pub data: Tls,
+    //
+    pub feature_cost: FeatureCosts
 }
 
 impl TlsHandshake {
@@ -94,22 +104,39 @@ impl Subscribable for TlsHandshake {
 #[doc(hidden)]
 pub struct TrackedTls {
     five_tuple: FiveTuple,
+    feature_cost: FeatureCosts,
 }
 
 impl Trackable for TrackedTls {
     type Subscribed = TlsHandshake;
 
     fn new(five_tuple: FiveTuple) -> Self {
-        TrackedTls { five_tuple }
+        let quanta = Clock::new();
+        TrackedTls {
+            five_tuple,
+            feature_cost: FeatureCosts::new(
+                P_ALLOC.current_usage(),
+                quanta.raw(),
+                Duration::default(),
+                P_ALLOC.current_usage()
+            ),
+        }
     }
 
     fn pre_match(&mut self, _pdu: L4Pdu, _session_id: Option<usize>) {}
 
     fn on_match(&mut self, session: Session, subscription: &Subscription<Self::Subscribed>) {
+        let quanta = Clock::new();
         if let SessionData::Tls(tls) = session.data {
             subscription.invoke(TlsHandshake {
                 five_tuple: self.five_tuple,
                 data: *tls,
+                feature_cost: FeatureCosts::new(
+                    self.feature_cost.p_feature_process_mem - P_ALLOC.current_usage(),
+                    self.feature_cost.p_feature_cycle_start,
+                    quanta.delta(self.feature_cost.p_feature_cycle_start, quanta.raw()),
+                    P_ALLOC.current_usage()
+                ),
             });
         }
     }
